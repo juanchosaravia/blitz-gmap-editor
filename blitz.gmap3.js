@@ -20,7 +20,6 @@ var BlitzMap = new function(){
     var dirProvideRouteAlternatives = false;
     var dirRouteUnit;
     var dirOptimizeWaypoints = false;
-    var geoXml = null;
 
     /*****************************************
      *
@@ -32,7 +31,7 @@ var BlitzMap = new function(){
 
 
         var mapOptions = {
-            center: new google.maps.LatLng( 19.006295, 73.309021 ),
+            center: new google.maps.LatLng( -31.39893, -64.182129 ),
             zoom: 4,
             mapTypeId: google.maps.MapTypeId.HYBRID
         };
@@ -48,18 +47,10 @@ var BlitzMap = new function(){
                 drawingControlOptions: {
                     position: google.maps.ControlPosition.TOP_CENTER,
                     drawingModes: [
-                        google.maps.drawing.OverlayType.MARKER,
-                        google.maps.drawing.OverlayType.CIRCLE,
-                        google.maps.drawing.OverlayType.RECTANGLE,
                         google.maps.drawing.OverlayType.POLYGON,
-                        google.maps.drawing.OverlayType.POLYLINE
                     ]
                 },
-                markerOptions: { editable: true, draggable:true },              // markers created are editable by default
-                circleOptions: { editable: true },              // circles created are editable by default
-                rectangleOptions: { editable: true },   // rectangles created are editable by default
-                polygonOptions: { editable: true },             // polygons created are editable by default
-                polylineOptions: { editable: true }            // polylines created are editable by default
+                polygonOptions: { editable: true }             // polygons created are editable by default
             });
         }
 
@@ -187,154 +178,15 @@ var BlitzMap = new function(){
         }
     }
 
-    this.setAvoidHighways = function( obj ){
-        dirAvoidHighways = obj.checked;
-    }
-
-    this.setAvoidTolls = function( obj ){
-        dirAvoidTolls = obj.checked;
-    }
-
-    this.setTravelMode = function( mode, menuObj ){
-        dirTravelMode = mode;
-        setStyle( document.getElementById( mapContainerId + '_mode_drive' ), { backgroundPosition: "bottom" } );
-        setStyle( document.getElementById( mapContainerId + '_mode_walk' ), { backgroundPosition: "bottom" } );
-        setStyle( document.getElementById( mapContainerId + '_mode_bicycle' ), { backgroundPosition: "bottom" } );
-        setStyle( menuObj, { backgroundPosition: "top" } );
-    }
-
-    this.getRoute = function(){
-        var start, end;
-        var waypts = [];
-        var routeDiv = document.getElementById( mapContainerId + '_route' );
-
-        for( var i=0; i < routeDiv.children.length; i++ ){
-            if( i== 0 ){
-                start = routeDiv.children[i].children[1].value;
-            }else if( i== routeDiv.children.length-1 ){
-                end = routeDiv.children[i].children[1].value;
-            }else{
-                waypts.push({
-                    location:routeDiv.children[i].children[1].value,
-                    stopover:true
-                });
-            }
-        }
-
-        var request = {
-            origin: start,
-            destination: end,
-            waypoints: waypts,
-            optimizeWaypoints: false,
-            travelMode: dirTravelMode,
-            avoidHighways: dirAvoidHighways,
-            avoidTolls: dirAvoidTolls,
-            provideRouteAlternatives: dirProvideRouteAlternatives,
-            unitSystem: dirRouteUnit,
-            optimizeWaypoints: dirOptimizeWaypoints
-        };
-
-        dirService.route(request, function(response, status) {
-            if (status == google.maps.DirectionsStatus.OK) {
-                dirRenderer.setDirections(response);
-                /*var summaryPanel = document.getElementById( mapContainerId + '_directions' );
-                 summaryPanel.innerHTML = "";
-                 for( var j=0; j < response.routes.length; j++ ) {
-                 var route = response.routes[j];
-
-                 // For each route, display summary information.
-                 for (var i = 0; i < route.legs.length; i++) {
-                 var routeSegment = i+1;
-                 summaryPanel.innerHTML += "<b>Route Segment: " + routeSegment + "</b><br />";
-                 summaryPanel.innerHTML += route.legs[i].start_address + " to ";
-                 summaryPanel.innerHTML += route.legs[i].end_address + "<br />";
-                 summaryPanel.innerHTML += route.legs[i].distance.text + "<br /><br />";
-                 }
-                 }*/
-            }
-        });
-
-    }
-
-
-
-    this.addDestination = function(){
-        var routeDiv = document.getElementById( mapContainerId + '_route' );
-        var routeNum = routeDiv.children.length;
-        if( routeNum == 8 ){
-            alert( "You have reached maximum number of destinations that can be searched with Google Directions API." )
-            return;
-        }
-        var newDest = document.createElement('div');
-        newDest.id = mapContainerId +'_route_row_'+ routeNum.toString();
-        newDest.className = 'route_row';
-
-        newDest.innerHTML = '<span id="'+mapContainerId+'_route_row_'+routeNum+'_title">'+String.fromCharCode(65+routeNum)+'</span> '
-            + '<input id="'+mapContainerId+'_route_row_'+routeNum+'_dest" type="text" />'
-            + '<img id="'+mapContainerId+'_route_row_'+routeNum+'_remove" alt="X" height="20" width="20" onclick="BlitzMap.removeDestination(this)" style="cursor:pointer" />';
-        routeDiv.appendChild( newDest );
-        for( var i=0; i < routeDiv.children.length; i++ ){
-            if( i<2 && routeDiv.children.length <= 2 ){
-                routeDiv.children[i].children[2].style.display = "none";
-            }else{
-                routeDiv.children[i].children[2].style.display = "inline";
-            }
-        }
-    }
-
-    this.removeDestination = function( obj ){
-        var rowDiv = obj.parentNode;
-        var routeDiv = rowDiv.parentNode;
-        routeDiv.removeChild( rowDiv );
-
-        for( var i=0; i < routeDiv.children.length; i++ ){
-            routeDiv.children[i].id = mapContainerId+'_route_row_'+i;
-            routeDiv.children[i].children[0].id = mapContainerId+'_route_row_'+i+'_title';
-            routeDiv.children[i].children[0].innerHTML = String.fromCharCode(65+i)
-            routeDiv.children[i].children[1].id = mapContainerId+'_route_row_'+i+'_dest';
-
-            routeDiv.children[i].children[2].id = mapContainerId+'_route_row_'+i+'_remove'
-            if( i<2 && routeDiv.children.length <= 2 ){
-                routeDiv.children[i].children[2].style.display = "none";
-            }else{
-                routeDiv.children[i].children[2].style.display = "inline";
-            }
-        }
-    }
-
-    this.setRouteUnit = function( unt ){
-        dirRouteUnit = unt;
-        if( dirRouteUnit == google.maps.UnitSystem.IMPERIAL ){
-            document.getElementById( mapContainerId + '_route_unit_mi' ).className = "";
-            document.getElementById( mapContainerId + '_route_unit_km' ).className = "route_row_menu";
-        }else{
-            document.getElementById( mapContainerId + '_route_unit_mi' ).className = "route_row_menu";
-            document.getElementById( mapContainerId + '_route_unit_km' ).className = "";
-        }
-    }
-
-    this.toggleRouteOptions = function(){
-        if( getStyle( document.getElementById( mapContainerId + "_route_options" ), "display" ) == "block" ){
-            setStyle( document.getElementById( mapContainerId + "_route_options" ), { display:"none" } );
-            document.getElementById( mapContainerId + "_route_opt_btn" ).innerHTML = "Show Options";
-
-        }else{
-            setStyle( document.getElementById( mapContainerId + "_route_options" ), { display:"block" } );
-            document.getElementById( mapContainerId + "_route_opt_btn" ).innerHTML = "Hide Options";
-        }
-
-    }
-
 
     function overlayDone( event ) {
         var uniqueid =  uniqid();
         event.overlay.uniqueid =  uniqueid;
-        event.overlay.title = "";
-        event.overlay.content = "";
+        event.overlay.id = 0;
         event.overlay.type = event.type;
         mapOverlays.push( event.overlay );
         AttachClickListener( event.overlay );
-        openInfowindow( event.overlay, getShapeCenter( event.overlay ), getEditorContent( event.overlay ) );
+        openInfowindow( event.overlay, getShapeCenter( event.overlay ), getCustomEditorContent( event.overlay ) );
     }
 
 
@@ -356,7 +208,7 @@ var BlitzMap = new function(){
         google.maps.event.addListener( overlay, "click", function(clkEvent){
 
             if( isEditable ){
-                var infContent =      getEditorContent( overlay );
+                var infContent =      getCustomEditorContent( overlay );
 
             }else{
                 var infContent = GetContent( overlay );
@@ -365,39 +217,20 @@ var BlitzMap = new function(){
             openInfowindow( overlay, clkEvent.latLng, infContent );
 
         } ) ;
-
     }
 
     function GetContent( overlay ){
+        var selectList = document.getElementById("BlitzMapInfoWindow_id");
+        var optValue = selectList.options[overlay.id].text;
+        
         var content =
-            '<div><h3>'+overlay.title+'</h3>'+overlay.content+'<br></div>'
-                + GetInfoWindowFooter( overlay );
+            '<div><h3>'+optValue+'</h3>' + GetInfoWindowFooter( overlay );
         return content;
     }
 
     function GetInfoWindowFooter( overlay ){
-        var content =
-            '<div id="'+mapContainerId+'_dirContainer" style="bottom:0;padding-top:3px; font-size:13px;font-family:arial">'
-                + '<div  style="border-top:1px dotted #999;">'
-                + '<style>.BlitzMap_Menu:hover{text-decoration:underline; }</style>'
-                + '<span class="BlitzMap_Menu" style="color:#ff0000; cursor:pointer;padding:0 5px;" onclick="BlitzMap.getDirections()">Directions</span>'
-                + '<span class="BlitzMap_Menu" style="color:#ff0000; cursor:pointer;padding:0 5px;">Search nearby</span>'
-                + '<span class="BlitzMap_Menu" style="color:#ff0000; cursor:pointer;padding:0 5px;">Save to map</span>'
-                + '</div></div>';
-        return content;
+        return '';
     }
-
-
-
-    this.getDirections = function(){
-        setStyle( sideBar, { display: "block" } );
-        setStyle( mapDiv, { width: "70%"} );
-        google.maps.event.trigger(mapObj, 'resize');
-        //mapObj.panTo( mapObj.getBounds() );
-
-    }
-
-
 
     function openInfowindow( overlay, latLng, content ){
         var div = document.createElement('div');
@@ -410,67 +243,23 @@ var BlitzMap = new function(){
         infWindow.open( mapObj );
     }
 
-    function getEditorContent( overlay ){
-
-        var content = '<style>'
-            + '#BlitzMapInfoWindow_container input:focus, #BlitzMapInfoWindow_container textarea:focus{border:2px solid #7DB1FF;} '
-            + '#BlitzMapInfoWindow_container .BlitzMapInfoWindow_button{background-color:#2883CE;color:#ffffff;padding:3px 10px;border:2px double #cccccc;cursor:pointer;} '
-            + '.BlitzMapInfoWindow_button:hover{background-color:#2883CE;border-color:#05439F;} '
-            + '</style>'
-
-            + '<form style="height:100%"><div id="BlitzMapInfoWindow_container" style="height:100%">'
-            + '<div id="BlitzMapInfoWindow_details">'
-            + '<div style="padding-bottom:3px;">Title:&nbsp;&nbsp;<input type="text" id="BlitzMapInfoWindow_title" value="'+overlay.title+'" style="border:2px solid #dddddd;width:150px;padding:3px;" ></div>'
-            + '<div style="padding-bottom:3px;">Description:<br><textarea id="BlitzMapInfoWindow_content" style="border:2px solid #dddddd;width:250px;height:115px;">'+overlay.content+'</textarea></div>'
-            + '</div>'
-            + '<div id="BlitzMapInfoWindow_styles" style="display:none;width:100%;">'
-            + '<div style="height:25px;padding-bottom:2px;font-weight:bold;">Styles &amp; Colors</div>';
-
-        if( overlay.type == 'polygon' || overlay.type == 'circle' || overlay.type == 'rectangle' ){
-
-            var fillColor = ( overlay.fillColor == undefined )? "#000000":overlay.fillColor;
-            content += '<div style="height:25px;padding-bottom:3px;">Fill Color: <input type="text" id="BlitzMapInfoWindow_fillcolor" value="'+ fillColor +'" style="border:2px solid #dddddd;width:30px;height:20px;font-size:0;float:right" ></div>';
-
-            var fillOpacity = ( overlay.fillOpacity == undefined )? 0.3:overlay.fillOpacity;
-            content += '<div style="height:25px;padding-bottom:3px;">Fill Opacity(percent): <input type="text" id="BlitzMapInfoWindow_fillopacity" value="'+ fillOpacity.toString() +'"  style="border:2px solid #dddddd;width:30px;float:right" onkeyup="BlitzMap.updateOverlay()" ></div>';
-
-        }
-        if( overlay.type != 'marker' ){
-
-            var strokeColor = ( overlay.strokeColor == undefined )? "#000000":overlay.strokeColor;
-            content += '<div style="height:25px;padding-bottom:3px;">Line Color: <input type="text" id="BlitzMapInfoWindow_strokecolor" value="'+ strokeColor +'" style="border:2px solid #dddddd;width:30px;height:20px;font-size:0;float:right" ></div>';
-
-            var strokeOpacity = ( overlay.strokeOpacity == undefined )? 0.9:overlay.strokeOpacity;
-            content += '<div style="height:25px;padding-bottom:3px;">Line Opacity(percent): <input type="text" id="BlitzMapInfoWindow_strokeopacity" value="'+ strokeOpacity.toString() +'" style="border:2px solid #dddddd;width:30px;float:right" onkeyup="BlitzMap.updateOverlay()" ></div>';
-
-            var strokeWeight = ( overlay.strokeWeight == undefined )? 3:overlay.strokeWeight;
-            content += '<div style="height:25px;padding-bottom:3px;">Line Thickness(pixels): <input type="text" id="BlitzMapInfoWindow_strokeweight" value="'+ strokeWeight.toString() +'" style="border:2px solid #dddddd;width:30px;float:right" onkeyup="BlitzMap.updateOverlay()" ></div>';
-
-        }else{
-
-            //var strokeColor = ( overlay.strokeColor == undefined )? "#000000":overlay.strokeColor;
-            //content += '<div style="height:25px;padding-bottom:3px;">Line Color: <input type="text" id="BlitzMapInfoWindow_strokecolor" value="'+ strokeColor +'" style="border:2px solid #dddddd;width:30px;height:20px;font-size:0;float:right" ></div>';
-
-            //var animation = overlay.getAnimation();
-            //content += '<div style="height:25px;padding-bottom:3px;">Line Opacity(percent): <select id="BlitzMapInfoWindow_animation" style="border:2px solid #dddddd;width:30px;float:right" ><option value="none">None</option><option value="bounce">Bounce</option><option value="drop">Drop</option></div>';
-
-            var icon = ( overlay.icon == undefined )? "":overlay.icon;
-            content += '<div style="height:25px;padding-bottom:3px;">Icon(): <input type="text" id="BlitzMapInfoWindow_icon" value="'+ icon.toString() +'" style="border:2px solid #dddddd;width:100px;float:right" ></div>';
-
-        }
-        content += '</div><div style="position:relative; bottom:0px;"><input type="button" value="Delete" class="BlitzMapInfoWindow_button" onclick="BlitzMap.deleteOverlay()" style="background-color:#2883CE;color:#ffffff;padding:3px 10px;border:2px double #cccccc;cursor:pointer;" title"Delete selected shape">&nbsp;&nbsp;'
-            +  '<input type="button" value="OK" class="BlitzMapInfoWindow_button" onclick="BlitzMap.closeInfoWindow()" style="background-color:#2883CE;color:#ffffff;padding:3px 10px;border:2px double #cccccc;cursor:pointer;float:right;" title="Apply changes to the overlay">'
-            +  '<input type="button" value="Cancel" class="BlitzMapInfoWindow_button" onclick="this.form.reset();BlitzMap.closeInfoWindow()" style="background-color:#2883CE;color:#ffffff;padding:3px 10px;border:2px double #cccccc;cursor:pointer;float:right;">'
-            + '<div style="clear:both;"></div>'
-            + '<input type="button" id="BlitzMapInfoWindow_toggle" title="Manage Colors and Styles" onclick="BlitzMap.toggleStyleEditor();return false;" style="border:0;float:right;margin-top:5px;cursor:pointer;background-color:#fff;color:#2883CE;font-family:Arial;font-size:12px;text-align:right;" value="Customize Colors&gt;&gt;" />';
-        + '<div style="clear:both;"></div>';
-        + '</div>';
-        + '</div></form>'
-
+    function getCustomEditorContent( overlay ){
+        
+        var selectObj = document.getElementById("BlitzMapInfoWindow_id");
+        resetOptions(selectObj);
+        selectObj.options[overlay.id].selected = true;
+        selectObj.options[overlay.id].setAttribute('selected','true');
+        
+        var content = document.getElementById('infoWinContainer').innerHTML;
 
         return content;
     }
-
+    
+    function resetOptions( sel ) {
+        for (var i=0; i<sel.length; i++) {
+            sel.options[i].removeAttribute('selected');
+        }
+    }
 
     function pickColor(){
         if( document.getElementById('BlitzMapInfoWindow_fillcolor') ){
@@ -479,8 +268,6 @@ var BlitzMap = new function(){
         if( document.getElementById('BlitzMapInfoWindow_strokecolor') ){
             var bdColor = new jscolor.color(document.getElementById('BlitzMapInfoWindow_strokecolor'), {})
         }
-
-
     }
 
     this.deleteOverlay = function(){
@@ -492,49 +279,14 @@ var BlitzMap = new function(){
         this.updateOverlay();
         infWindow.close();
     }
+    
+    this.cancelInfoWindow = function(){
+        infWindow.close();
+    }
 
     this.updateOverlay = function(){
-        infWindow.relatedOverlay.title = document.getElementById( 'BlitzMapInfoWindow_title' ).value;
-        infWindow.relatedOverlay.content = document.getElementById( 'BlitzMapInfoWindow_content' ).value;
-
-        if( infWindow.relatedOverlay.type == 'polygon' || infWindow.relatedOverlay.type == 'circle' || infWindow.relatedOverlay.type == 'rectangle' ){
-
-            infWindow.relatedOverlay.setOptions( {fillColor: '#'+document.getElementById( 'BlitzMapInfoWindow_fillcolor' ).value.replace('#','') } );
-            setStyle( document.getElementById( 'BlitzMapInfoWindow_fillcolor' ), { 'background-color': '#'+document.getElementById( 'BlitzMapInfoWindow_fillcolor' ).value.replace('#','') } );
-
-            infWindow.relatedOverlay.setOptions( {fillOpacity: Number( document.getElementById( 'BlitzMapInfoWindow_fillopacity' ).value ) } );
-        }
-
-        if( infWindow.relatedOverlay.type != 'marker' ){
-            infWindow.relatedOverlay.setOptions( {strokeColor: '#'+document.getElementById( 'BlitzMapInfoWindow_strokecolor' ).value.replace('#','') } );
-
-            infWindow.relatedOverlay.setOptions( {strokeOpacity: Number( document.getElementById( 'BlitzMapInfoWindow_strokeopacity' ).value ) } );
-
-            infWindow.relatedOverlay.setOptions( {strokeWeight: Number( document.getElementById( 'BlitzMapInfoWindow_strokeweight' ).value ) } );
-        }else{
-            infWindow.relatedOverlay.setOptions( {icon: document.getElementById( 'BlitzMapInfoWindow_icon' ).value } );
-        }
+        infWindow.relatedOverlay.id = document.getElementById( 'BlitzMapInfoWindow_id' ).value;
     }
-
-
-    this.toggleStyleEditor = function(){
-        var tmp = document.getElementById( 'BlitzMapInfoWindow_details' );
-        var tmp1 = document.getElementById( 'BlitzMapInfoWindow_styles' );
-        if( tmp ){
-            if( getStyle( tmp, "display" ) == 'none' ){
-                setStyle( tmp1, { display: "none" } );
-                document.getElementById( 'BlitzMapInfoWindow_toggle' ).value = "Customize Colors>>"
-                setStyle( tmp, { display: "block" } );
-
-            }else{
-                setStyle( tmp, { display: "none" } );
-                document.getElementById( 'BlitzMapInfoWindow_toggle' ).value = "Back>>"
-                setStyle( tmp1, { display: "block" } );
-            }
-
-        }
-    }
-
 
     function notify ( msg ){
         if( notifyErrors ){
@@ -647,16 +399,11 @@ var BlitzMap = new function(){
 
             var uniqueid =  uniqid();
             tmpOverlay.uniqueid =  uniqueid;
-            if( inputData.overlays[m].title ){
-                tmpOverlay.title = inputData.overlays[m].title;
+            
+            if( inputData.overlays[m].id ){
+                tmpOverlay.id = inputData.overlays[m].id;
             }else{
-                tmpOverlay.title = "";
-            }
-
-            if( inputData.overlays[m].content ){
-                tmpOverlay.content = inputData.overlays[m].content;
-            }else{
-                tmpOverlay.content = "";
+                tmpOverlay.id = 0;
             }
 
             //attach the click listener to the overlay
@@ -687,108 +434,6 @@ var BlitzMap = new function(){
         }
     }
 
-    this.setMapFromEncoded = function ( encodedString ){
-        if( encodedString.length == 0 ){
-            return false;
-        }
-        var pointsArray = google.maps.geometry.encoding.decodePath( encodedString );
-        var tmpBounds = new google.maps.LatLngBounds();
-        for (var i = 0; i < pointsArray.length; i++)
-        {
-            tmpBounds.extend(pointsArray[i]);
-        }
-        var tmpOverlay;
-        var ovrOptions = new Object();
-        var properties = new Array( 'fillColor', 'fillOpacity', 'strokeColor', 'strokeOpacity','strokeWeight', 'icon');
-        ovrOptions.strokeWidth = 2;
-        ovrOptions.strokeColor = "#0000FF";
-        ovrOptions.strokeOpacity = 0.8;
-        ovrOptions.fillColor =  "#0000FF";
-        ovrOptions.fillOpacity = 0.2;
-        ovrOptions.paths = [pointsArray];
-        tmpOverlay = new google.maps.Polygon( ovrOptions );
-
-        tmpOverlay.type = "polygon";
-        tmpOverlay.setMap( mapObj );
-        mapObj.fitBounds(tmpBounds);
-        tmpOverlay.setEditable( true );
-
-        var uniqueid =  uniqid();
-        tmpOverlay.uniqueid =  uniqueid;
-        tmpOverlay.title = "";
-        tmpOverlay.content = "";
-
-        //attach the click listener to the overlay
-        AttachClickListener( tmpOverlay );
-
-        //save the overlay in the array
-        mapOverlays.push( tmpOverlay );
-
-    }
-
-    this.setMapFromKML = function ( kmlString ){
-        if( kmlString.length == 0 ){
-            return false;
-        }
-        if (typeof geoXML3 == "undefined") { // check for include of geoxml3 parser
-            // http://code.google.com/p/geoxml3/
-            alert("geoxml3.js not included");
-            return;
-        }
-        if (!geoXml)
-            geoXml = new geoXML3.parser({
-                map: mapObj,
-                zoom: false,
-                suppressInfoWindows: true
-            });
-
-        geoXml.parseKmlString( kmlString );
-
-        var tmpOverlay, ovrOptions;
-        for (var m=0; m < geoXml.docs[0].placemarks.length; m++) {
-            if( geoXml.docs[0].placemarks[m].Polygon){
-
-                tmpOverlay = geoXml.docs[0].placemarks[m].polygon;
-                if( isEditable ){
-                    tmpOverlay.setEditable( true );
-                }
-                tmpOverlay.type = "polygon";
-            }else if( geoXml.docs[0].placemarks[m].LineString){
-
-                tmpOverlay = geoXml.docs[0].placemarks[m].polyline;
-                if( isEditable ){
-                    tmpOverlay.setEditable( true );
-                }
-                tmpOverlay.type = "polyline";
-            }else if( geoXml.docs[0].placemarks[m].Point){
-
-                tmpOverlay = geoXml.docs[0].placemarks[m].marker;
-                tmpOverlay.type = "marker";         }
-
-
-            var uniqueid =  uniqid();
-            tmpOverlay.uniqueid =  uniqueid;
-            if( geoXml.docs[0].placemarks[m].name ){
-                tmpOverlay.title = geoXml.docs[0].placemarks[m].name;
-            }else{
-                tmpOverlay.title = "";
-            }
-
-            if(  geoXml.docs[0].placemarks[m].description ){
-                tmpOverlay.content =  geoXml.docs[0].placemarks[m].description;
-            }else{
-                tmpOverlay.content = "";
-            }
-
-            //attach the click listener to the overlay
-            AttachClickListener( tmpOverlay );
-
-            //save the overlay in the array
-            mapOverlays.push( tmpOverlay );
-        }
-        mapObj.fitBounds(geoXml.docs[0].bounds);
-    }
-
     this.deleteAll = function() {
         for( var i=0; i < mapOverlays.length; i++ ){
             mapOverlays[i].setMap(null)
@@ -811,8 +456,7 @@ var BlitzMap = new function(){
             }
             tmpOverlay = new Object;
             tmpOverlay.type = mapOverlays[i].type;
-            tmpOverlay.title = mapOverlays[i].title;
-            tmpOverlay.content = mapOverlays[i].content;
+            tmpOverlay.id = mapOverlays[i].id;
 
             if( mapOverlays[i].fillColor ){
                 tmpOverlay.fillColor = mapOverlays[i].fillColor;
@@ -884,125 +528,6 @@ var BlitzMap = new function(){
         }
 
         return result;
-    }
-
-    this.toKML = function(){
-        var result = mapToObject();
-        var xw = new XMLWriter('UTF-8');
-        xw.formatting = 'indented';//add indentation and newlines
-        xw.indentChar = ' ';//indent with spaces
-        xw.indentation = 2;//add 2 spaces per level
-
-        xw.writeStartDocument( );
-        xw.writeStartElement( 'kml' );
-        xw.writeAttributeString( "xmlns", "http://www.opengis.net/kml/2.2" );
-        xw.writeStartElement('Document');
-
-        for( var i = 0; i < result.overlays.length; i++ ){
-            xw.writeStartElement('Placemark');
-            xw.writeStartElement('name');
-            xw.writeCDATA( result.overlays[i].title );
-            xw.writeEndElement();
-            xw.writeStartElement('description');
-            xw.writeCDATA( result.overlays[i].content );
-            xw.writeEndElement();
-            if( result.overlays[i].type == "marker" ){
-
-                xw.writeStartElement('Point');
-                xw.writeElementString('extrude', '1');
-                xw.writeElementString('altitudeMode', 'relativeToGround');
-                xw.writeElementString('coordinates', result.overlays[i].position.lng.toString()+","+result.overlays[i].position.lat.toString()+",0");
-                xw.writeEndElement();
-
-            }else if( result.overlays[i].type == "polygon" || result.overlays[i].type == "rectangle" || result.overlays[i].type == "circle" ){
-                xw.writeStartElement('Polygon');
-                xw.writeElementString('extrude', '1');
-                xw.writeElementString('altitudeMode', 'relativeToGround');
-
-                if( result.overlays[i].type == "rectangle" ){
-                    //its a polygon
-                    xw.writeStartElement('outerBoundaryIs');
-                    xw.writeStartElement('LinearRing');
-                    xw.writeStartElement( "coordinates" );
-                    xw.writeString( result.overlays[i].bounds.sw.lng + "," + result.overlays[i].bounds.sw.lat + ",0" );
-                    xw.writeString( result.overlays[i].bounds.ne.lng + "," + result.overlays[i].bounds.sw.lat + ",0" );
-                    xw.writeString( result.overlays[i].bounds.ne.lng + "," + result.overlays[i].bounds.ne.lat + ",0" );
-                    xw.writeString( result.overlays[i].bounds.sw.lng + "," + result.overlays[i].bounds.ne.lat + ",0" );
-                    xw.writeEndElement();
-                    xw.writeEndElement();
-                    xw.writeEndElement();
-                }else if (result.overlays[i].type == "circle"){
-                    //its a polygon, approximate a circle by a circular 64 sided polygon.
-                    xw.writeStartElement('outerBoundaryIs');
-                    xw.writeStartElement('LinearRing');
-                    xw.writeStartElement( "coordinates" );
-                    var d2r = Math.PI / 180;   // degrees to radians
-                    var r2d = 180 / Math.PI;   // radians to degrees
-                    var earthsradius = 6378137; // 6378137 is the radius of the earth in meters
-                    var dir = 1; // clockwise
-
-                    var points = 64;
-
-                    // find the raidus in lat/lon
-                    var rlat = (result.overlays[i].radius / earthsradius) * r2d;
-                    var rlng = rlat / Math.cos(result.overlays[i].center.lat * d2r);
-
-                    var extp = new Array();
-                    if (dir==1)     {var start=0;var end=points+1} // one extra here makes sure we connect the line
-                    else            {var start=points+1;var end=0}
-                    for (var j=start; (dir==1 ? j < end : j > end); j=j+dir){
-                        var theta = Math.PI * (j / (points/2));
-                        ey = result.overlays[i].center.lng + (rlng * Math.cos(theta)); // center a + radius x * cos(theta)
-                        ex = result.overlays[i].center.lat + (rlat * Math.sin(theta)); // center b + radius y * sin(theta)
-                        xw.writeString( ey + "," + ex + ",0" );
-                    }
-                    xw.writeEndElement();
-                    xw.writeEndElement();
-                    xw.writeEndElement();
-                }else{
-                    for( var j=0; j < result.overlays[i].paths.length; j++ ){
-                        if( j==0 ){
-                            xw.writeStartElement('outerBoundaryIs');
-                        }else{
-                            xw.writeStartElement('innerBoundaryIs');
-                        }
-                        xw.writeStartElement('LinearRing');
-                        xw.writeStartElement( "coordinates" );
-                        for( var k=0; k < result.overlays[i].paths[j].length; k++ ){
-                            xw.writeString( result.overlays[i].paths[j][k].lng + "," + result.overlays[i].paths[j][k].lat + ",0" );
-                        }
-                        xw.writeEndElement();
-                        xw.writeEndElement();
-                        xw.writeEndElement();
-                    }
-                }
-                xw.writeEndElement();
-
-            }else if( result.overlays[i].type == "polyline" ){
-                xw.writeStartElement('LineString');
-                xw.writeElementString('extrude', '1');
-                xw.writeElementString('altitudeMode', 'relativeToGround');
-                xw.writeStartElement( "coordinates" );
-                for( var j=0; j < result.overlays[i].path.length; j++ ){
-                    xw.writeString( result.overlays[i].path[j].lng + "," + result.overlays[i].path[j].lat + ",0" );
-                }
-                xw.writeEndElement();
-                xw.writeEndElement();
-
-            }
-
-            xw.writeEndElement(); // END PlaceMarker
-        }
-
-        xw.writeEndElement();
-        xw.writeEndElement();
-        xw.writeEndDocument();
-
-        var xml = xw.flush(); //generate the xml string
-        xw.close();//clean the writer
-        xw = undefined;//don't let visitors use it, it's closed
-        //set the xml
-        document.getElementById('kmlString').value = xml;
     }
 
     function getStyle( elem, prop ){

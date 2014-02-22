@@ -7,6 +7,7 @@
 <script src="http://maps.googleapis.com/maps/api/js?sensor=false&libraries=drawing,geometry" type="text/javascript"></script>
 <script type="text/javascript" src="http://geoxml3.googlecode.com/svn/branches/polys/geoxml3.js"></script>
 <script type="text/javascript" src="http://geoxml3.googlecode.com/svn/trunk/ProjectedOverlay.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
 <script src="jscolor/jscolor.js" type="text/javascript"></script>
 <script src="json2.js" type="text/javascript"></script>
 <script src="xmlwriter.js" type="text/javascript"></script>
@@ -22,6 +23,7 @@
 <input type="button" value="generate polygon from encoded" onclick="BlitzMap.setMapFromEncoded(document.getElementById('encodedData').value);" /> <input type="button" value="clear map" onclick="BlitzMap.deleteAll();" /><input type="button" value="toggle edit mode" onclick="BlitzMap.toggleEditable();" />
 <textarea id="encodedData" style="width:100%; /* height: 100px; */">aq|rFttwdQiizCfl}AqcbFfxv@_jfBff}@silAdfdDl`UzrlCmpp@z~eBgq@rrz`@~_dK?rfBstgK~daE~eBbwDulch@</textarea>
 <input type="button" value="Generate Map Text" onclick="BlitzMap.toJSONString()" />
+<input type="button" value="Create Map from JSON" onclick="BlitzMap.setMap( 'myMap', true, 'mapData' ); BlitzMap.init()">
 
 <textarea id="mapData" style="width:100%; height:300px">
 {"zoom":7,"tilt":0,"mapTypeId":"hybrid","center":{"lat":20.487486793750797,"lng":74.22363281640626},"overlays":[{"type":"polygon","title":"","content":"","fillColor":"#000000","fillOpacity":0.3,"strokeColor":"#000000","strokeOpacity":0.9,"strokeWeight":3,"paths":[[{"lat":"21.329035778926478","lng":"73.46008301171878"},{"lat":"21.40065516914794","lng":"78.30505371484378"},{"lat":"20.106233605369603","lng":"77.37121582421878"},{"lat":"20.14749530904506","lng":"72.65808105859378"}]]}]}</textarea>
@@ -36,5 +38,37 @@
 _uacct = "UA-162157-1";
 urchinTracker();
 </script>
+
+<div id='infoWinContainer'>
+    <style>
+       #BlitzMapInfoWindow_container input:focus, #BlitzMapInfoWindow_container textarea:focus{border:2px solid #7DB1FF;}
+       #BlitzMapInfoWindow_container .BlitzMapInfoWindow_button{background-color:#2883CE;color:#ffffff;padding:3px 10px;border:2px double #cccccc;cursor:pointer;}
+       .BlitzMapInfoWindow_button:hover{background-color:#2883CE;border-color:#05439F;}
+    </style>
+    <form style="height:100%">
+       <div id="BlitzMapInfoWindow_container" style="height:100%">
+          <div id="BlitzMapInfoWindow_details">
+             Places:&nbsp;&nbsp;
+                <select id="BlitzMapInfoWindow_id">
+                   <option value="0">Pick a place Name</option>
+                   <option value="1">Place 1</option>
+                   <option value="2">Place 2</option>
+                </select>
+          </div>
+          <div id="BlitzMapInfoWindow_styles" style="display:none;width:100%;">
+             <div style="height:25px;padding-bottom:2px;font-weight:bold;">Styles &amp; Colors</div>
+          </div>
+          <div style="position:relative; bottom:0px;">
+             <input type="button" value="Delete" class="BlitzMapInfoWindow_button" onclick="BlitzMap.deleteOverlay()" style="background-color:#2883CE;color:#ffffff;padding:3px 10px;border:2px double #cccccc;cursor:pointer;" title"Delete selected shape">&nbsp;&nbsp;
+             <input type="button" value="OK" class="BlitzMapInfoWindow_button" onclick="BlitzMap.closeInfoWindow()" style="background-color:#2883CE;color:#ffffff;padding:3px 10px;border:2px double #cccccc;cursor:pointer;float:right;" title="Apply changes to the overlay">
+             <input type="button" value="Cancel" class="BlitzMapInfoWindow_button" onclick="this.form.reset();BlitzMap.cancelInfoWindow()" style="background-color:#2883CE;color:#ffffff;padding:3px 10px;border:2px double #cccccc;cursor:pointer;float:right;">
+             <div style="clear:both;"></div>
+             <div style="clear:both;"></div>
+          </div>
+       </div>
+    </form>
+</div>
+
+
 </body>
 </html>
