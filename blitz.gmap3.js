@@ -9,17 +9,9 @@ var BlitzMap = new function(){
     var mapOverlays = new Array();
     var isEditable = false;
     var notifyErrors = true;
-    var colorPicker;
     var mapContainerId, sideBar, mapDiv, mapStorageId;
-    var routeUnit = "metric";
     var dirRenderer;
     var dirService;
-    var dirTravelMode;
-    var dirAvoidHighways = false;
-    var dirAvoidTolls = false;
-    var dirProvideRouteAlternatives = false;
-    var dirRouteUnit;
-    var dirOptimizeWaypoints = false;
 
     /*****************************************
      *
@@ -109,6 +101,7 @@ var BlitzMap = new function(){
                 mapDiv.id = divId + "_map";
                 setStyle( mapDiv, { height: "100%", width: "100%", position:"absolute", "zIndex":1, left:"0" } );
 
+                document.getElementById( mapContainerId ).innerHTML = '';
                 document.getElementById( mapContainerId ).appendChild( mapDiv );
 
                 sideBar = document.createElement('div');
@@ -165,6 +158,8 @@ var BlitzMap = new function(){
 
         if( edit == true ){
             isEditable = true;
+        } else {
+            isEditable = false;
         }
 
         if( typeof inputId == "string" ){
@@ -556,4 +551,4 @@ var BlitzMap = new function(){
     }
 }
 
-google.maps.event.addDomListener(window, "load", BlitzMap.init);
+// google.maps.event.addDomListener(window, "load", BlitzMap.init);
